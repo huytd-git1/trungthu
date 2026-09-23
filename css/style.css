@@ -1,0 +1,487 @@
+/* ==========================================================================
+   Website Trung Thu 3D - Bảng màu & Kiểu dáng Cổ Tích Cung Trăng
+   Giao diện Thoáng đãng, Nghệ thuật & Tối ưu Hoàn hảo cho Mobile
+   ========================================================================== */
+
+:root {
+  --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Bảng màu đêm trăng huyền ảo, giàu sắc thái */
+  --bg-deep: #0a0e27;
+  --bg-night: #141b42;
+  --bg-purple: #241744;
+  --moon-silver: #f1f5f9;
+  --gold-warm: #fec84d;
+  --gold-rich: #f59e0b;
+  --gold-amber: #d97706;
+  --red-lantern: #ef4444;
+  --silk-pink: #f472b6;
+  --jade-teal: #14b8a6;
+
+  /* Kính mờ nhẹ nhàng */
+  --glass-bg: rgba(13, 17, 44, 0.45);
+  --glass-bg-card: rgba(18, 22, 54, 0.9);
+  --glass-border: rgba(254, 200, 77, 0.3);
+  --glass-border-highlight: rgba(254, 200, 77, 0.7);
+  --glass-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.7), 0 0 35px rgba(245, 158, 11, 0.2);
+  
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+  
+  --transition-smooth: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-bounce: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 30%, #1a153a 0%, #0c102b 60%, #060818 100%);
+  font-family: var(--font-sans);
+  color: var(--moon-silver);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none; /* Tối ưu cảm ứng mobile */
+}
+
+/* ==========================================================================
+   Khung Canvas 3D & Nền
+   ========================================================================== */
+
+#webgl-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  outline: none;
+  touch-action: none;
+}
+
+#webgl-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+/* ==========================================================================
+   Giao Diện Người Dùng Tinh Gọn (HUD Overlays)
+   ========================================================================== */
+
+.hud-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 32px;
+}
+
+@media (max-width: 768px) {
+  .hud-overlay {
+    padding: 16px;
+  }
+}
+
+/* Header: Nút điều khiển âm thanh góc trên bên phải */
+.hud-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 16px;
+  pointer-events: auto;
+}
+
+.intro-minimal {
+  max-width: 580px;
+  animation: fadeInDown 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: none;
+}
+
+.intro-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.2rem, 3.5vw, 1.85rem);
+  font-weight: 700;
+  line-height: 1.35;
+  color: #fff;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.9), 0 0 24px rgba(254, 200, 77, 0.45);
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+
+.intro-subtitle {
+  font-size: clamp(0.85rem, 2.2vw, 1.05rem);
+  color: #e2e8f0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.4;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.9), 0 0 16px rgba(254, 200, 77, 0.3);
+  background: rgba(14, 18, 43, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(254, 200, 77, 0.25);
+}
+
+.lantern-icon-pulse {
+  display: inline-block;
+  animation: lanternBob 2.4s ease-in-out infinite alternate;
+  font-size: 1.15rem;
+}
+
+/* Nút điều khiển âm thanh góc trên */
+.hud-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+.btn-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: var(--radius-full);
+  background: rgba(14, 18, 43, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1.5px solid var(--glass-border);
+  color: var(--moon-silver);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  transition: var(--transition-bounce);
+  position: relative;
+  outline: none;
+}
+
+.btn-icon:hover {
+  transform: scale(1.1);
+  border-color: var(--gold-warm);
+  color: var(--gold-warm);
+  box-shadow: 0 0 25px rgba(254, 200, 77, 0.5);
+}
+
+.btn-icon:focus-visible {
+  outline: 2px solid var(--gold-warm);
+  outline-offset: 3px;
+}
+
+.btn-icon svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  transition: transform 0.3s ease;
+}
+
+.sound-btn.playing {
+  border-color: var(--gold-warm);
+  color: var(--gold-warm);
+  box-shadow: 0 0 25px rgba(254, 200, 77, 0.4);
+}
+
+.sound-btn.playing svg {
+  animation: pulseSound 1.8s infinite;
+}
+
+/* ==========================================================================
+   Tooltip 3D bay theo đèn lồng
+   ========================================================================== */
+
+#scene-tooltip {
+  position: fixed;
+  z-index: 25;
+  pointer-events: none;
+  background: rgba(14, 18, 43, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--gold-warm);
+  border-radius: var(--radius-sm);
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  color: var(--gold-warm);
+  font-weight: 600;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 0 20px rgba(245, 158, 11, 0.35);
+  transform: translate(-50%, -140%);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  white-space: nowrap;
+}
+
+#scene-tooltip.visible {
+  opacity: 1;
+  transform: translate(-50%, -155%);
+}
+
+/* ==========================================================================
+   Tấm Thiệp Lời Chúc Trung Thu (Wish Modal Dialog)
+   ========================================================================== */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 8, 24, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+  pointer-events: auto;
+}
+
+.modal-backdrop.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.wish-card {
+  position: relative;
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--glass-bg-card);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1.5px solid var(--glass-border-highlight);
+  border-radius: var(--radius-lg);
+  padding: 38px 36px 32px;
+  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.85), 0 0 55px rgba(245, 158, 11, 0.3);
+  transform: scale(0.9) translateY(20px);
+  transition: var(--transition-bounce);
+}
+
+.modal-backdrop.open .wish-card {
+  transform: scale(1) translateY(0);
+}
+
+/* Họa tiết hoa văn viền góc Á Đông */
+.card-corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-color: var(--gold-warm);
+  opacity: 0.75;
+  pointer-events: none;
+}
+.card-corner-tl { top: 12px; left: 12px; border-top: 2px solid; border-left: 2px solid; }
+.card-corner-tr { top: 12px; right: 12px; border-top: 2px solid; border-right: 2px solid; }
+.card-corner-bl { bottom: 12px; left: 12px; border-bottom: 2px solid; border-left: 2px solid; }
+.card-corner-br { bottom: 12px; right: 12px; border-bottom: 2px solid; border-right: 2px solid; }
+
+/* Nút đóng modal */
+.btn-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(254, 200, 77, 0.3);
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.btn-close:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: var(--red-lantern);
+  color: #fff;
+  transform: rotate(90deg);
+}
+
+.card-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold-warm);
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(254, 200, 77, 0.35);
+  border-radius: var(--radius-full);
+  padding: 5px 16px;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.wish-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.4rem, 4vw, 1.95rem);
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.25;
+  margin-bottom: 18px;
+  text-shadow: 0 0 20px rgba(254, 200, 77, 0.4);
+}
+
+.wish-message {
+  font-size: clamp(0.95rem, 2.5vw, 1.08rem);
+  line-height: 1.7;
+  color: #e2e8f0;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.wish-quote {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(0.88rem, 2.2vw, 0.98rem);
+  line-height: 1.6;
+  color: var(--gold-warm);
+  background: rgba(254, 200, 77, 0.08);
+  border-left: 3px solid var(--gold-warm);
+  padding: 10px 16px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-bottom: 28px;
+}
+
+/* Các nút hành động trong modal */
+.card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  border-top: 1px solid rgba(254, 200, 77, 0.18);
+}
+
+.btn-secondary {
+  padding: 11px 22px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(254, 200, 77, 0.3);
+  color: #e2e8f0;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: var(--gold-warm);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.btn-primary {
+  padding: 11px 26px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #d97706, #dc2626);
+  border: 1px solid var(--gold-warm);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(220, 38, 38, 0.45);
+  transition: var(--transition-bounce);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 6px 28px rgba(245, 158, 11, 0.65);
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+}
+
+.copy-toast {
+  position: absolute;
+  bottom: 24px;
+  left: 36px;
+  font-size: 0.82rem;
+  color: var(--jade-teal);
+  font-weight: 600;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: var(--transition-smooth);
+}
+
+.copy-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   Animations
+   ========================================================================== */
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes lanternBob {
+  0% { transform: translateY(0) rotate(-3deg); }
+  100% { transform: translateY(-5px) rotate(4deg); }
+}
+
+@keyframes pulseSound {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* ==========================================================================
+   Mobile Tối Ưu
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  .intro-minimal {
+    max-width: 80%;
+  }
+  .wish-card {
+    padding: 28px 20px 24px;
+  }
+  .card-actions {
+    justify-content: stretch;
+  }
+  .card-actions button {
+    flex: 1;
+    justify-content: center;
+  }
+}
