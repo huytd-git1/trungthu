@@ -392,12 +392,24 @@ export class LanternManager {
     // Tự động gỡ bỏ hào quang 3D hướng dẫn trên lồng đèn 1
     this.removeGuideBeacon();
 
-    // Tính toán góc camera đẹp: hướng về phía đèn lồng nhưng vẫn thấy một phần cây đa
+    // Tính toán góc camera đẹp: góc nhìn thoáng đãng, zoom out rộng hơn để thấy rõ trọn vẹn cả lồng đèn và cây đa
     const lanternPos = lantern.position.clone();
-    const dir = new THREE.Vector3(0, 0.4, 3.8).applyAxisAngle(new THREE.Vector3(0, 1, 0), lantern.position.x * 0.12);
+    const isMobile = (typeof window !== 'undefined' && window.innerWidth <= 768);
+    const zoomDist = isMobile ? 10.2 : 8.5;
+    const yOffset = isMobile ? 0.9 : 0.7;
+
+    const dir = new THREE.Vector3(0, yOffset, zoomDist).applyAxisAngle(
+      new THREE.Vector3(0, 1, 0),
+      lantern.position.x * 0.08
+    );
     const targetCamPos = lanternPos.clone().add(dir);
 
-    this.startCameraMove(targetCamPos, lanternPos, 1.4);
+    const targetLookAt = lanternPos.clone();
+    if (isMobile) {
+      targetLookAt.y -= 1.0; // Trên mobile, hạ tâm nhìn để đèn lồng và cây đa hiển thị rõ ràng ở nửa trên màn hình
+    }
+
+    this.startCameraMove(targetCamPos, targetLookAt, 1.4);
 
     // Báo cho UI mở modal thiệp chúc
     if (this.onSelectWish) {
