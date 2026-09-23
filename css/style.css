@@ -239,9 +239,9 @@ html, body {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(6, 8, 24, 0.72);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(4, 6, 18, 0.15); /* Trong suốt nhẹ, KHÔNG làm tối cảnh 3D */
+  backdrop-filter: none; /* KHÔNG mờ nền xung quanh */
+  -webkit-backdrop-filter: none;
   z-index: 50;
   display: flex;
   align-items: center;
@@ -249,7 +249,7 @@ html, body {
   padding: 20px;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.4s ease, visibility 0.4s ease;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
   pointer-events: auto;
 }
 
@@ -261,16 +261,16 @@ html, body {
 .wish-card {
   position: relative;
   width: 100%;
-  max-width: 540px;
-  max-height: 90vh;
+  max-width: 500px;
+  max-height: 85vh;
   overflow-y: auto;
-  background: var(--glass-bg-card);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
+  background: rgba(12, 16, 38, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border: 1.5px solid var(--glass-border-highlight);
   border-radius: var(--radius-lg);
-  padding: 38px 36px 32px;
-  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.85), 0 0 55px rgba(245, 158, 11, 0.3);
+  padding: 34px 30px 28px;
+  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.9), 0 0 55px rgba(245, 158, 11, 0.35);
   transform: scale(0.9) translateY(20px);
   transition: var(--transition-bounce);
 }
@@ -467,21 +467,112 @@ html, body {
 }
 
 /* ==========================================================================
-   Mobile Tối Ưu
+   Footer & Dấu ấn tác giả (Made by huytd)
+   ========================================================================== */
+
+.hud-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  pointer-events: auto;
+}
+
+.hud-signature {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: rgba(226, 232, 240, 0.75);
+  background: rgba(14, 18, 43, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 5px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(254, 200, 77, 0.28);
+  letter-spacing: 0.6px;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.85);
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.hud-signature:hover {
+  color: var(--gold-warm);
+  border-color: var(--gold-warm);
+  box-shadow: 0 0 16px rgba(254, 200, 77, 0.35);
+  transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   Mobile Tối Ưu: Khung lời chúc gọn gàng, nhìn rõ trọn vẹn cảnh 3D đằng sau
    ========================================================================== */
 
 @media (max-width: 640px) {
-  .intro-minimal {
-    max-width: 80%;
+  .modal-backdrop {
+    padding: 12px;
+    align-items: flex-end; /* Đặt phía dưới để nửa trên màn hình thoáng đãng nhìn thấy Mặt Trăng & Đèn Lồng */
+    padding-bottom: 20px;
   }
+
   .wish-card {
-    padding: 28px 20px 24px;
+    max-width: 350px;
+    max-height: 62vh; /* Thu nhỏ để không che lấp cảnh */
+    padding: 18px 16px 14px;
+    border-radius: 18px;
+    background: rgba(12, 16, 38, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(245, 158, 11, 0.25);
   }
+
+  .card-header-badge {
+    font-size: 0.68rem;
+    padding: 3px 10px;
+    margin-bottom: 8px;
+    letter-spacing: 0.8px;
+  }
+
+  .wish-title {
+    font-size: 1.15rem;
+    margin-bottom: 8px;
+    line-height: 1.25;
+  }
+
+  .wish-message {
+    font-size: 0.86rem;
+    line-height: 1.5;
+    margin-bottom: 8px;
+    max-height: 24vh;
+    overflow-y: auto;
+  }
+
+  .wish-quote {
+    font-size: 0.78rem;
+    padding: 7px 10px;
+    margin-bottom: 10px;
+    line-height: 1.35;
+  }
+
+  .btn-close {
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+  }
+
   .card-actions {
+    gap: 6px;
     justify-content: stretch;
   }
+
   .card-actions button {
     flex: 1;
     justify-content: center;
+    padding: 7px 8px;
+    font-size: 0.78rem;
+    border-radius: 12px;
+    gap: 4px;
+  }
+
+  .hud-signature {
+    font-size: 0.7rem;
+    padding: 4px 10px;
   }
 }
