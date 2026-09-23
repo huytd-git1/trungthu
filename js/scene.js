@@ -227,6 +227,7 @@ export class WorldScene {
     // 3. Nhân vật: Cuội, Hằng, Thỏ Ngọc
     this.characters = createCharacters();
     this.scene.add(this.characters);
+    this.clickableCharacters = this.characters.clickableCharacters || [];
 
     // 4. TOÀN BỘ HỆ MẶT TRỜI KỲ VĨ & TRÁI ĐẤT, MẶT TRĂNG (The Solar System)
     // Trái Đất quay quanh Mặt Trời, Mặt Trăng quay quanh Trái Đất

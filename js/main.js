@@ -22,6 +22,14 @@ class MidAutumnApp {
     this.guideBubbleEl = document.getElementById('guide-bubble');
     this.guideSoundEl = document.getElementById('guide-sound-hint');
 
+    // Khung bảng tên nhân vật (Quỳnh Dương & Mặc Thủ Nhân)
+    this.characterNameplateEl = document.getElementById('character-nameplate');
+    this.nameplateRoleEl = document.getElementById('nameplate-role');
+    this.nameplateNameEl = document.getElementById('nameplate-name');
+    this.nameplateQuoteEl = document.getElementById('nameplate-quote');
+    this.activeCharacterTarget = null;
+    this.nameplateTimer = null;
+
     this.mouse = new THREE.Vector2();
     this.raycaster = new THREE.Raycaster();
     this.isPointerDown = false;
@@ -112,6 +120,15 @@ class MidAutumnApp {
       });
     }
 
+    // C. Nút đóng bảng tên nhân vật
+    const btnCloseNameplate = document.getElementById('nameplate-close');
+    if (btnCloseNameplate) {
+      btnCloseNameplate.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.hideCharacterNameplate();
+      });
+    }
+
     // D. Nút đóng modal
     const btnCloseModal = document.getElementById('btn-close-modal');
     const btnCloseView = document.getElementById('btn-close-view');
@@ -191,6 +208,60 @@ class MidAutumnApp {
     }
   }
 
+  /**
+   * Hiển thị bảng tên khi ấn vào Chị Hằng (Quỳnh Dương) hoặc Chú Cuội (Mặc Thủ Nhân)
+   */
+  showCharacterNameplate(charData, hitBox) {
+    if (!charData || !this.characterNameplateEl) return;
+
+    this.activeCharacterTarget = {
+      charData,
+      hitBox
+    };
+
+    if (this.nameplateRoleEl) this.nameplateRoleEl.textContent = charData.role;
+    if (this.nameplateNameEl) this.nameplateNameEl.textContent = charData.name;
+    if (this.nameplateQuoteEl) this.nameplateQuoteEl.textContent = charData.quote;
+
+    this.characterNameplateEl.style.display = 'block';
+
+    // Hiệu ứng nhảy vui mừng của nhân vật
+    if (hitBox.parent) {
+      const parentObj = hitBox.parent;
+      const origY = parentObj.position.y;
+      parentObj.position.y = origY + 0.3;
+      setTimeout(() => {
+        parentObj.position.y = origY;
+      }, 240);
+    }
+
+    // Hiệu ứng hạt bụi sao nở rộ quanh nhân vật
+    const worldPos = new THREE.Vector3();
+    hitBox.getWorldPosition(worldPos);
+    worldPos.y += 1.2;
+    if (this.lanternManager && this.lanternManager.spawnParticleBurst) {
+      this.lanternManager.spawnParticleBurst(worldPos);
+    }
+    audioSystem.playLanternChime();
+
+    // Tự động đóng sau 6.5 giây
+    if (this.nameplateTimer) clearTimeout(this.nameplateTimer);
+    this.nameplateTimer = setTimeout(() => {
+      this.hideCharacterNameplate();
+    }, 6500);
+  }
+
+  hideCharacterNameplate() {
+    this.activeCharacterTarget = null;
+    if (this.characterNameplateEl) {
+      this.characterNameplateEl.style.display = 'none';
+    }
+    if (this.nameplateTimer) {
+      clearTimeout(this.nameplateTimer);
+      this.nameplateTimer = null;
+    }
+  }
+
   showWishModal(wishData, lanternIdx) {
     // Tự động tắt toàn bộ hướng dẫn khi bất kỳ đèn lồng nào được chọn
     this.dismissGuides();
@@ -218,15 +289,27 @@ class MidAutumnApp {
       this.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
       this.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
-      // Cập nhật Raycast kiểm tra đèn lồng được hover
+      // Cập nhật Raycast kiểm tra đèn lồng hoặc nhân vật được hover
       this.raycaster.setFromCamera(this.mouse, this.world.camera);
       const intersects = this.raycaster.intersectObjects(this.lanternManager.clickableMeshes, false);
+      const charIntersects = (this.world && this.world.clickableCharacters) ?
+        this.raycaster.intersectObjects(this.world.clickableCharacters, false) : [];
 
       if (intersects.length > 0) {
         const hitLantern = this.lanternManager.handleHover(intersects[0].object);
         if (hitLantern) {
           document.body.style.cursor = 'pointer';
           this.tooltip.textContent = `🏮 ${hitLantern.cfg.title} - Chạm để xem lời chúc`;
+          this.tooltip.style.left = `${e.clientX}px`;
+          this.tooltip.style.top = `${e.clientY}px`;
+          this.tooltip.classList.add('visible');
+          this.world.controls.autoRotate = false;
+        }
+      } else if (charIntersects.length > 0) {
+        const charData = charIntersects[0].object.userData;
+        if (charData && charData.isCharacter) {
+          document.body.style.cursor = 'pointer';
+          this.tooltip.textContent = `✨ ${charData.role}: ${charData.name} (Chạm để xem)`;
           this.tooltip.style.left = `${e.clientX}px`;
           this.tooltip.style.top = `${e.clientY}px`;
           this.tooltip.classList.add('visible');
@@ -239,7 +322,7 @@ class MidAutumnApp {
       }
     });
 
-    // 2. Click / Tap trên canvas để chọn đèn
+    // 2. Click / Tap trên canvas để chọn đèn hoặc nhân vật
     window.addEventListener('pointerdown', (e) => {
       this.pointerDownPos = { x: e.clientX, y: e.clientY };
     });
@@ -249,8 +332,8 @@ class MidAutumnApp {
       const dist = Math.hypot(e.clientX - this.pointerDownPos.x, e.clientY - this.pointerDownPos.y);
       if (dist > 8) return;
 
-      // Không raycast nếu click trúng vào các phần tử HUD / Modal
-      if (e.target.closest('.hud-overlay') || e.target.closest('.modal-backdrop')) {
+      // Không raycast nếu click trúng vào các phần tử HUD / Modal / Nameplate
+      if (e.target.closest('.hud-overlay') || e.target.closest('.modal-backdrop') || e.target.closest('.character-nameplate')) {
         return;
       }
 
@@ -258,12 +341,29 @@ class MidAutumnApp {
       this.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
       this.raycaster.setFromCamera(this.mouse, this.world.camera);
 
+      // Kiểm tra xem có click vào nhân vật (Chị Hằng - Quỳnh Dương, Chú Cuội - Mặc Thủ Nhân) không
+      const charIntersects = (this.world && this.world.clickableCharacters) ?
+        this.raycaster.intersectObjects(this.world.clickableCharacters, false) : [];
+
+      if (charIntersects.length > 0) {
+        const charData = charIntersects[0].object.userData;
+        if (charData && charData.isCharacter) {
+          this.showCharacterNameplate(charData, charIntersects[0].object);
+          return;
+        }
+      }
+
+      // Kiểm tra click vào đèn lồng
       const intersects = this.raycaster.intersectObjects(this.lanternManager.clickableMeshes, false);
       if (intersects.length > 0) {
         const lantern = intersects[0].object.userData.lanternRef;
         if (lantern) {
+          this.hideCharacterNameplate();
           this.lanternManager.selectLantern(lantern);
         }
+      } else {
+        // Click ra khoảng không: ẩn bảng tên nhân vật nếu đang hiện
+        this.hideCharacterNameplate();
       }
     });
 
@@ -340,6 +440,23 @@ class MidAutumnApp {
         }
       } else {
         this.guideTrackerEl.style.display = 'none';
+      }
+    }
+
+    // Chiếu tọa độ 3D của nhân vật sang màn hình 2D để neo bảng tên trên đỉnh đầu
+    if (this.activeCharacterTarget && this.characterNameplateEl) {
+      const worldPos = new THREE.Vector3();
+      this.activeCharacterTarget.hitBox.getWorldPosition(worldPos);
+      worldPos.y += (this.activeCharacterTarget.charData.characterType === 'hang' ? 1.5 : 1.25);
+      worldPos.project(this.world.camera);
+
+      if (worldPos.z < 1) {
+        const x = (worldPos.x * 0.5 + 0.5) * window.innerWidth;
+        const y = (-worldPos.y * 0.5 + 0.5) * window.innerHeight;
+        this.characterNameplateEl.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+        this.characterNameplateEl.style.display = 'block';
+      } else {
+        this.characterNameplateEl.style.display = 'none';
       }
     }
   }

@@ -367,6 +367,21 @@ export function createCharacters() {
   flute.rotation.set(0.2, 0, 0.9);
   cuoiGroup.add(flute);
 
+  // Hit-box vô hình để dễ dàng click/chạm vào Chú Cuội (Mặc Thủ Nhân)
+  const cuoiHitBoxGeo = new THREE.CapsuleGeometry(0.7, 1.8, 8, 8);
+  const cuoiHitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
+  const cuoiHitBox = new THREE.Mesh(cuoiHitBoxGeo, cuoiHitBoxMat);
+  cuoiHitBox.position.set(0, 1.0, 0);
+  cuoiHitBox.userData = {
+    isCharacter: true,
+    characterType: 'cuoi',
+    name: 'Mặc Thủ Nhân',
+    role: '🌾 Chú Cuội',
+    quote: 'Chàng Cuội ngồi tựa gốc đa, thổi khúc sáo trúc an yên giữa đêm rằm.'
+  };
+  cuoiGroup.add(cuoiHitBox);
+  cuoiGroup.hitBox = cuoiHitBox;
+
   charGroup.add(cuoiGroup);
 
   // ----------------------------------------------------
@@ -377,13 +392,13 @@ export function createCharacters() {
   hangGroup.position.set(1.3, 0, 0);
   hangGroup.rotation.y = -0.25;
 
-  // Chất liệu trang phục Chị Hằng
+  // Chất liệu trang phục Chị Hằng (Áo lụa trắng tinh khôi)
   const hangSkinMat = new THREE.MeshStandardMaterial({ color: 0xfde3cf, roughness: 0.5 });
   const hangDressMat = new THREE.MeshStandardMaterial({
-    color: 0xfce7f3, // Hồng phấn tiên cảnh
-    emissive: 0x4a1936,
-    emissiveIntensity: 0.2,
-    roughness: 0.6
+    color: 0xffffff, // Màu trắng ngọc trai thanh khiết
+    emissive: 0x333344,
+    emissiveIntensity: 0.16,
+    roughness: 0.45
   });
   const hangSashMat = new THREE.MeshStandardMaterial({
     color: 0xfbcfe8,
@@ -445,6 +460,21 @@ export function createCharacters() {
   const ribbon = new THREE.Mesh(ribbonGeo, hangSashMat);
   hangGroup.add(ribbon);
   hangGroup.ribbon = ribbon;
+
+  // Hit-box vô hình để dễ dàng click/chạm vào Chị Hằng (Quỳnh Dương)
+  const hangHitBoxGeo = new THREE.CapsuleGeometry(0.8, 2.2, 8, 8);
+  const hangHitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
+  const hangHitBox = new THREE.Mesh(hangHitBoxGeo, hangHitBoxMat);
+  hangHitBox.position.set(0, 1.2, 0);
+  hangHitBox.userData = {
+    isCharacter: true,
+    characterType: 'hang',
+    name: 'Quỳnh Dương',
+    role: '🌕 Chị Hằng',
+    quote: 'Nàng tiên Cung Quảng thanh nhã, gửi ánh trăng vẹn tròn dịu ngọt đến muôn nơi.'
+  };
+  hangGroup.add(hangHitBox);
+  hangGroup.hitBox = hangHitBox;
 
   charGroup.add(hangGroup);
 
@@ -508,9 +538,27 @@ export function createCharacters() {
 
   charGroup.add(rabbitGroup);
 
+  // Hit-box vô hình cho Thỏ Ngọc
+  const rabbitHitBoxGeo = new THREE.SphereGeometry(0.7, 8, 8);
+  const rabbitHitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
+  const rabbitHitBox = new THREE.Mesh(rabbitHitBoxGeo, rabbitHitBoxMat);
+  rabbitHitBox.position.set(0, 0.5, 0);
+  rabbitHitBox.userData = {
+    isCharacter: true,
+    characterType: 'rabbit',
+    name: 'Thỏ Ngọc',
+    role: '🐇 Thỏ Ngọc',
+    quote: 'Thỏ ngọc nhỏ bên gốc cây đa, chúc bạn một mùa trăng đong đầy niềm vui!'
+  };
+  rabbitGroup.add(rabbitHitBox);
+  rabbitGroup.hitBox = rabbitHitBox;
+
   charGroup.cuoiGroup = cuoiGroup;
   charGroup.hangGroup = hangGroup;
   charGroup.rabbitGroup = rabbitGroup;
+
+  // Danh sách các hit-box nhân vật để raycasting
+  charGroup.clickableCharacters = [cuoiHitBox, hangHitBox, rabbitHitBox];
 
   return charGroup;
 }
