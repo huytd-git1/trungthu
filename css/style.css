@@ -576,3 +576,285 @@ html, body {
     padding: 4px 10px;
   }
 }
+
+/* ==========================================================================
+   Hệ Thống Hướng Dẫn Tương Tác Ban Đầu (Interactive Guidance Overlays)
+   Tự động biến mất êm dịu khi người dùng chọn vào bất kỳ lồng đèn nào
+   ========================================================================== */
+
+.guide-element {
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 1;
+}
+
+.guide-element.fade-out {
+  opacity: 0 !important;
+  transform: scale(0.88) !important;
+  pointer-events: none !important;
+}
+
+/* 1. Hướng dẫn nút bật/tắt âm thanh góc trên */
+.guide-sound-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(14, 18, 48, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1.5px solid rgba(254, 200, 77, 0.65);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 20px rgba(245, 158, 11, 0.35);
+  border-radius: var(--radius-full);
+  padding: 8px 18px;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  pointer-events: auto;
+  cursor: pointer;
+  animation: soundHintFloat 2.6s ease-in-out infinite alternate;
+}
+
+.guide-sound-text {
+  color: #fef08a;
+  text-shadow: 0 0 10px rgba(254, 200, 77, 0.5);
+}
+
+.guide-sound-arrow {
+  display: inline-block;
+  font-size: 1.05rem;
+  animation: arrowBounceX 1.1s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+}
+
+/* 2. Chỉ dẫn trỏ tới lồng đèn số 1 (Tracker bám sát tọa độ 3D) */
+.guide-lantern-tracker {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 25;
+  will-change: transform;
+}
+
+/* Sóng xung kích phát sáng nhấp nháy ngay tại tâm lồng đèn */
+.tracker-beacon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+}
+
+.tracker-core {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fef08a;
+  box-shadow: 0 0 16px #f59e0b, 0 0 32px #f59e0b;
+  transform: translate(-50%, -50%);
+  animation: coreGlow 1.4s ease-in-out infinite alternate;
+}
+
+.tracker-pulse {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(254, 200, 77, 0.85);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.6);
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+}
+
+.pulse-1 {
+  animation: ringPulse 2.0s cubic-bezier(0.1, 0.8, 0.2, 1) infinite;
+}
+
+.pulse-2 {
+  animation: ringPulse 2.0s cubic-bezier(0.1, 0.8, 0.2, 1) infinite 1.0s;
+}
+
+/* Khung bong bóng chỉ dẫn phong cách Á Đông */
+.guide-bubble {
+  position: absolute;
+  left: 28px;
+  top: -42px;
+  pointer-events: auto;
+  cursor: pointer;
+  background: rgba(12, 16, 42, 0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1.5px solid rgba(254, 200, 77, 0.7);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 30px rgba(245, 158, 11, 0.4);
+  border-radius: 20px;
+  padding: 13px 20px 12px;
+  color: #fff;
+  white-space: nowrap;
+  animation: bubbleHover 2.6s ease-in-out infinite alternate;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.guide-bubble:hover {
+  transform: scale(1.05);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.85), 0 0 40px rgba(254, 200, 77, 0.6);
+  border-color: #fde047;
+}
+
+/* Trường hợp đèn lồng sát mép phải thì lật khung sang trái */
+.guide-bubble.align-left {
+  left: auto;
+  right: 28px;
+}
+
+.guide-bubble.align-left .guide-hand {
+  left: auto;
+  right: -32px;
+  transform: scaleX(-1);
+}
+
+.guide-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #fbbf24;
+  margin-bottom: 3px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.guide-title {
+  font-family: var(--font-serif);
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.3;
+  margin-bottom: 3px;
+  text-shadow: 0 0 14px rgba(254, 200, 77, 0.6);
+}
+
+.guide-desc {
+  font-size: 0.82rem;
+  color: #e2e8f0;
+  font-weight: 400;
+}
+
+.guide-hand {
+  position: absolute;
+  left: -32px;
+  top: 22px;
+  font-size: 1.7rem;
+  animation: handBounce 1.0s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+  filter: drop-shadow(0 0 10px rgba(254, 200, 77, 0.8));
+}
+
+/* ==========================================================================
+   Keyframe Animations Cho Hệ Thống Hướng Dẫn
+   ========================================================================== */
+
+@keyframes soundHintFloat {
+  0% {
+    transform: translateY(0);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 18px rgba(245, 158, 11, 0.25);
+  }
+  100% {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.7), 0 0 28px rgba(254, 200, 77, 0.5);
+  }
+}
+
+@keyframes arrowBounceX {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(6px);
+  }
+}
+
+@keyframes coreGlow {
+  0% {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+}
+
+@keyframes ringPulse {
+  0% {
+    width: 14px;
+    height: 14px;
+    opacity: 1;
+  }
+  100% {
+    width: 68px;
+    height: 68px;
+    opacity: 0;
+  }
+}
+
+@keyframes bubbleHover {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes handBounce {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(8px);
+  }
+}
+
+/* Tối ưu hướng dẫn trên điện thoại Mobile */
+@media (max-width: 640px) {
+  .guide-sound-hint {
+    padding: 5px 12px;
+    font-size: 0.74rem;
+    gap: 5px;
+  }
+
+  .guide-sound-arrow {
+    font-size: 0.9rem;
+  }
+
+  .guide-bubble {
+    left: 20px;
+    top: -34px;
+    padding: 10px 14px 9px;
+    border-radius: 16px;
+    max-width: 220px;
+    white-space: normal;
+  }
+
+  .guide-badge {
+    font-size: 0.65rem;
+    letter-spacing: 0.6px;
+  }
+
+  .guide-title {
+    font-size: 0.98rem;
+  }
+
+  .guide-desc {
+    font-size: 0.75rem;
+    line-height: 1.35;
+  }
+
+  .guide-hand {
+    font-size: 1.35rem;
+    left: -24px;
+    top: 18px;
+  }
+}
+

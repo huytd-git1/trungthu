@@ -201,6 +201,34 @@ export class LanternManager {
       lanternObj.add(hitBox);
       this.clickableMeshes.push(hitBox);
 
+      // Đèn lồng số 1 có hiệu ứng vòng nhẫn phát sáng 3D để người dùng nhận diện ngay lập tức
+      if (idx === 0) {
+        const ringGeo1 = new THREE.TorusGeometry(0.85, 0.024, 16, 64);
+        const ringMat1 = new THREE.MeshBasicMaterial({
+          color: 0xfef08a,
+          transparent: true,
+          opacity: 0.85,
+          blending: THREE.AdditiveBlending
+        });
+        const ring1 = new THREE.Mesh(ringGeo1, ringMat1);
+        ring1.rotation.x = Math.PI / 2;
+        lanternObj.add(ring1);
+        lanternObj.guideRing1 = ring1;
+
+        const ringGeo2 = new THREE.TorusGeometry(0.72, 0.016, 16, 48);
+        const ringMat2 = new THREE.MeshBasicMaterial({
+          color: 0xf59e0b,
+          transparent: true,
+          opacity: 0.7,
+          blending: THREE.AdditiveBlending
+        });
+        const ring2 = new THREE.Mesh(ringGeo2, ringMat2);
+        ring2.rotation.x = Math.PI / 3;
+        ring2.rotation.y = Math.PI / 4;
+        lanternObj.add(ring2);
+        lanternObj.guideRing2 = ring2;
+      }
+
       this.scene.add(lanternObj);
       this.lanterns.push(lanternObj);
     });
@@ -245,6 +273,17 @@ export class LanternManager {
       if (lantern.halo) {
         const targetScale = (lantern === this.hoveredLantern || lantern === this.selectedLantern) ? 1.4 : 1.0;
         lantern.halo.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), delta * 5);
+      }
+
+      // Cập nhật hoạt ảnh vòng nhẫn chỉ dẫn 3D của đèn lồng 1
+      if (lantern.guideRing1) {
+        lantern.guideRing1.rotation.z += delta * 1.6;
+        const s = 1.0 + Math.sin(elapsed * 3.5) * 0.08;
+        lantern.guideRing1.scale.set(s, s, s);
+      }
+      if (lantern.guideRing2) {
+        lantern.guideRing2.rotation.y += delta * 1.2;
+        lantern.guideRing2.rotation.x += delta * 0.8;
       }
     });
 
@@ -350,6 +389,9 @@ export class LanternManager {
     audioSystem.playLanternChime();
     this.spawnParticleBurst(lantern.position);
 
+    // Tự động gỡ bỏ hào quang 3D hướng dẫn trên lồng đèn 1
+    this.removeGuideBeacon();
+
     // Tính toán góc camera đẹp: hướng về phía đèn lồng nhưng vẫn thấy một phần cây đa
     const lanternPos = lantern.position.clone();
     const dir = new THREE.Vector3(0, 0.4, 3.8).applyAxisAngle(new THREE.Vector3(0, 1, 0), lantern.position.x * 0.12);
@@ -426,6 +468,27 @@ export class LanternManager {
     } else {
       this.hoveredLantern = null;
       return null;
+    }
+  }
+
+  /**
+   * Tháo gỡ các vòng hào quang chỉ dẫn 3D trên lồng đèn 1
+   */
+  removeGuideBeacon() {
+    if (this.lanterns.length > 0 && this.lanterns[0]) {
+      const l1 = this.lanterns[0];
+      if (l1.guideRing1) {
+        l1.remove(l1.guideRing1);
+        l1.guideRing1.geometry.dispose();
+        l1.guideRing1.material.dispose();
+        l1.guideRing1 = null;
+      }
+      if (l1.guideRing2) {
+        l1.remove(l1.guideRing2);
+        l1.guideRing2.geometry.dispose();
+        l1.guideRing2.material.dispose();
+        l1.guideRing2 = null;
+      }
     }
   }
 }

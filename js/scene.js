@@ -52,14 +52,15 @@ export class WorldScene {
   initCamera() {
     // Tầm nhìn xa lên đến 1200 để thấy trọn vẹn cả Hệ Mặt Trời khi zoom out
     this.camera = new THREE.PerspectiveCamera(48, this.width / this.height, 0.1, 1200);
-    this.camera.position.set(0, 5.6, 20.5);
+    // Bố trí góc nhìn bao quát, hơi hướng về khu vực đèn lồng số 1
+    this.camera.position.set(-0.8, 5.8, 19.8);
   }
 
   initControls() {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.06;
-    this.controls.target.set(0, 3.8, 0);
+    this.controls.target.set(-0.8, 4.4, 0);
 
     // PHẠM VI ZOOM SIÊU RỘNG:
     // Zoom gần (2.0) ngắm Cuội, Hằng, Thỏ, Đèn lồng
@@ -69,7 +70,8 @@ export class WorldScene {
     this.controls.minPolarAngle = Math.PI * 0.05;
     this.controls.maxPolarAngle = Math.PI * 0.75; // Có thể xoay ngắm quanh Mặt Trăng khi zoom xa
 
-    this.controls.autoRotate = true;
+    // Tạm dừng tự xoay trong lúc hướng dẫn ban đầu để người dùng dễ nhìn thấy lồng đèn số 1
+    this.controls.autoRotate = false;
     this.controls.autoRotateSpeed = 0.14;
     this.controls.enableZoom = true;
     this.controls.zoomSpeed = 1.1;

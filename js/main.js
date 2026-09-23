@@ -16,6 +16,12 @@ class MidAutumnApp {
     this.wishCard = document.getElementById('wish-card');
     this.deck = document.getElementById('lantern-deck');
 
+    // Các thành phần hướng dẫn tương tác ban đầu
+    this.guideActive = true;
+    this.guideTrackerEl = document.getElementById('guide-lantern-tracker');
+    this.guideBubbleEl = document.getElementById('guide-bubble');
+    this.guideSoundEl = document.getElementById('guide-sound-hint');
+
     this.mouse = new THREE.Vector2();
     this.raycaster = new THREE.Raycaster();
     this.isPointerDown = false;
@@ -90,6 +96,22 @@ class MidAutumnApp {
     // Khởi tạo trạng thái ban đầu (mặc định đang phát)
     updateSoundBtnUI(!audioSystem.getIsMuted());
 
+    // B. Tương tác với các thành phần hướng dẫn
+    if (this.guideBubbleEl) {
+      this.guideBubbleEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (this.lanternManager && this.lanternManager.lanterns[0]) {
+          this.lanternManager.selectLantern(this.lanternManager.lanterns[0]);
+        }
+      });
+    }
+
+    if (this.guideSoundEl) {
+      this.guideSoundEl.addEventListener('click', () => {
+        if (soundBtn) soundBtn.click();
+      });
+    }
+
     // D. Nút đóng modal
     const btnCloseModal = document.getElementById('btn-close-modal');
     const btnCloseView = document.getElementById('btn-close-view');
@@ -141,7 +163,38 @@ class MidAutumnApp {
     });
   }
 
+  /**
+   * Tắt toàn bộ hướng dẫn tương tác sau khi người dùng đã chọn vào lồng đèn
+   */
+  dismissGuides() {
+    if (!this.guideActive) return;
+    this.guideActive = false;
+
+    // Bật lại tự động xoay nhẹ nhàng sau khi người dùng bắt đầu tương tác
+    if (this.world && this.world.controls) {
+      this.world.controls.autoRotate = true;
+    }
+
+    const guideElements = document.querySelectorAll('.guide-element');
+    guideElements.forEach(el => {
+      el.classList.add('fade-out');
+    });
+
+    setTimeout(() => {
+      guideElements.forEach(el => {
+        el.style.display = 'none';
+      });
+    }, 500);
+
+    if (this.lanternManager && this.lanternManager.removeGuideBeacon) {
+      this.lanternManager.removeGuideBeacon();
+    }
+  }
+
   showWishModal(wishData, lanternIdx) {
+    // Tự động tắt toàn bộ hướng dẫn khi bất kỳ đèn lồng nào được chọn
+    this.dismissGuides();
+
     this.updateActiveChip(lanternIdx);
 
     const totalLanterns = (this.lanternManager && this.lanternManager.lanterns.length) ? this.lanternManager.lanterns.length : 12;
@@ -261,6 +314,34 @@ class MidAutumnApp {
     const { delta, elapsed } = this.world.update();
     this.lanternManager.update(delta, elapsed);
     this.world.render();
+
+    // Chiếu tọa độ 3D của Đèn Lồng 1 sang màn hình 2D để bám sát chỉ dẫn
+    if (this.guideActive && this.guideTrackerEl && this.lanternManager.lanterns[0]) {
+      const l1 = this.lanternManager.lanterns[0];
+      const pos = l1.position.clone();
+      // Tâm đèn lồng 1
+      pos.project(this.world.camera);
+
+      // Nếu đèn lồng nằm trước mặt camera (pos.z < 1)
+      if (pos.z < 1) {
+        const x = (pos.x * 0.5 + 0.5) * window.innerWidth;
+        const y = (-pos.y * 0.5 + 0.5) * window.innerHeight;
+
+        this.guideTrackerEl.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+        this.guideTrackerEl.style.display = 'block';
+
+        // Tự động căn lề nếu ở nửa phải màn hình
+        if (this.guideBubbleEl) {
+          if (x > window.innerWidth * 0.6) {
+            this.guideBubbleEl.classList.add('align-left');
+          } else {
+            this.guideBubbleEl.classList.remove('align-left');
+          }
+        }
+      } else {
+        this.guideTrackerEl.style.display = 'none';
+      }
+    }
   }
 }
 
