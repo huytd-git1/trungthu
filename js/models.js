@@ -912,7 +912,7 @@ export function createSolarSystem() {
   solarGroup.name = "SolarSystemGroup";
 
   // Tâm của hệ mặt trời (Vị trí đặt Mặt Trời trong không gian sâu)
-  const sunCenter = new THREE.Vector3(-140, 45, -120);
+  const sunCenter = new THREE.Vector3(-110, 36, -95);
   solarGroup.sunCenter = sunCenter;
 
   // 1. MẶT TRỜI RỰC RỠ (The Sun)
@@ -969,6 +969,14 @@ export function createSolarSystem() {
       color: 0xfef08a,
       speed: 1.2,
       angle: 2.1
+    },
+    {
+      name: "Earth", // Trái Đất (Cùng Mặt Trăng quay quanh)
+      radius: 6.2,
+      orbitDist: 90,
+      isEarth: true,
+      speed: 1.0,
+      angle: 0.65
     },
     {
       name: "Mars", // Sao Hỏa (Hành tinh Đỏ)
@@ -1030,53 +1038,132 @@ export function createSolarSystem() {
     }
     orbitGeo.setAttribute('position', new THREE.Float32BufferAttribute(orbitPts, 3));
     const orbitMat = new THREE.LineBasicMaterial({
-      color: 0x60a5fa,
+      color: p.isEarth ? 0x38bdf8 : 0x60a5fa,
       transparent: true,
-      opacity: 0.14
+      opacity: p.isEarth ? 0.42 : 0.14
     });
     const orbitLine = new THREE.Line(orbitGeo, orbitMat);
     solarGroup.add(orbitLine);
 
     // B. Quả cầu hành tinh
-    const pGeo = new THREE.SphereGeometry(p.radius, 24, 24);
-    let pMat;
-    if (p.texture) {
-      pMat = new THREE.MeshStandardMaterial({
-        map: p.texture,
-        roughness: 0.6
-      });
-    } else {
-      pMat = new THREE.MeshStandardMaterial({
-        color: p.color,
-        roughness: 0.7
-      });
-    }
+    let pMesh;
+    if (p.isEarth) {
+      // 1. Khởi tạo Trái Đất đầy đủ lục địa, đại dương, mây và tầng khí quyển
+      pMesh = createEarth(p.radius);
+      pMesh.name = p.name;
+      pMesh.orbitDist = p.orbitDist;
+      pMesh.speed = p.speed;
+      pMesh.angle = p.angle;
+      pMesh.isEarth = true;
 
-    const pMesh = new THREE.Mesh(pGeo, pMat);
-    pMesh.name = p.name;
-    pMesh.orbitDist = p.orbitDist;
-    pMesh.speed = p.speed;
-    pMesh.angle = p.angle;
+      // 2. HỆ THỐNG MẶT TRĂNG QUAY QUANH TRÁI ĐẤT (The Moon Orbiting Earth)
+      const moonOrbitGroup = new THREE.Group();
+      moonOrbitGroup.name = "MoonOrbitGroup";
 
-    // Vành đai Sao Thổ nếu có
-    if (p.hasRings) {
-      const ringGeo = new THREE.RingGeometry(p.radius * 1.35, p.radius * 2.4, 48);
-      const ringMat = new THREE.MeshStandardMaterial({
-        map: createSaturnRingTexture(),
-        side: THREE.DoubleSide,
+      const moonOrbitDist = 15.5;
+      const moonRadius = 1.8;
+      const moonInclination = THREE.MathUtils.degToRad(5.15); // Độ nghiêng quỹ đạo 5.15°
+
+      // Vòng quỹ đạo ánh bạc của Mặt Trăng quanh Trái Đất
+      const moonOrbitGeo = new THREE.BufferGeometry();
+      const mSegs = 64;
+      const mPts = [];
+      for (let j = 0; j <= mSegs; j++) {
+        const ma = (j / mSegs) * Math.PI * 2;
+        mPts.push(
+          Math.cos(ma) * moonOrbitDist,
+          Math.sin(ma) * (moonOrbitDist * Math.tan(moonInclination)),
+          Math.sin(ma) * moonOrbitDist
+        );
+      }
+      moonOrbitGeo.setAttribute('position', new THREE.Float32BufferAttribute(mPts, 3));
+      const moonOrbitMat = new THREE.LineBasicMaterial({
+        color: 0xf1f5f9,
         transparent: true,
-        opacity: 0.85
+        opacity: 0.5
       });
-      const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-      ringMesh.rotation.x = Math.PI / 2 + 0.45;
-      ringMesh.rotation.y = 0.2;
-      pMesh.add(ringMesh);
+      const moonOrbitLine = new THREE.Line(moonOrbitGeo, moonOrbitMat);
+      moonOrbitGroup.add(moonOrbitLine);
+
+      // Quả cầu Mặt Trăng
+      const moonGeo = new THREE.SphereGeometry(moonRadius, 28, 28);
+      const moonMat = new THREE.MeshStandardMaterial({
+        map: createMoonTexture(),
+        roughness: 0.85,
+        metalness: 0.1,
+        color: 0xdbeafe
+      });
+      const moonMesh = new THREE.Mesh(moonGeo, moonMat);
+      moonMesh.name = "Moon";
+      moonMesh.orbitDist = moonOrbitDist;
+      moonMesh.inclination = moonInclination;
+      moonMesh.angle = 0.8;
+      moonMesh.speed = 3.6;
+
+      // Hào quang bạc dịu mát quanh Mặt Trăng
+      const moonHaloGeo = new THREE.SphereGeometry(moonRadius * 1.3, 20, 20);
+      const moonHaloMat = new THREE.MeshBasicMaterial({
+        color: 0xfef08a,
+        transparent: true,
+        opacity: 0.35,
+        blending: THREE.AdditiveBlending
+      });
+      moonMesh.add(new THREE.Mesh(moonHaloGeo, moonHaloMat));
+
+      moonMesh.position.set(
+        Math.cos(moonMesh.angle) * moonOrbitDist,
+        Math.sin(moonMesh.angle) * (moonOrbitDist * Math.tan(moonInclination)),
+        Math.sin(moonMesh.angle) * moonOrbitDist
+      );
+
+      moonOrbitGroup.add(moonMesh);
+      pMesh.add(moonOrbitGroup);
+
+      pMesh.moonMesh = moonMesh;
+      pMesh.moonOrbitGroup = moonOrbitGroup;
+      solarGroup.earth = pMesh;
+      solarGroup.moon = moonMesh;
+    } else {
+      const pGeo = new THREE.SphereGeometry(p.radius, 24, 24);
+      let pMat;
+      if (p.texture) {
+        pMat = new THREE.MeshStandardMaterial({
+          map: p.texture,
+          roughness: 0.6
+        });
+      } else {
+        pMat = new THREE.MeshStandardMaterial({
+          color: p.color,
+          roughness: 0.7
+        });
+      }
+
+      pMesh = new THREE.Mesh(pGeo, pMat);
+      pMesh.name = p.name;
+      pMesh.orbitDist = p.orbitDist;
+      pMesh.speed = p.speed;
+      pMesh.angle = p.angle;
+
+      // Vành đai Sao Thổ nếu có
+      if (p.hasRings) {
+        const ringGeo = new THREE.RingGeometry(p.radius * 1.35, p.radius * 2.4, 48);
+        const ringMat = new THREE.MeshStandardMaterial({
+          map: createSaturnRingTexture(),
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.85
+        });
+        const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+        ringMesh.rotation.x = Math.PI / 2 + 0.45;
+        ringMesh.rotation.y = 0.2;
+        pMesh.add(ringMesh);
+      }
     }
 
     // Đặt vị trí ban đầu
     pMesh.position.set(
       sunCenter.x + Math.cos(p.angle) * p.orbitDist,
-      sunCenter.y,
+      sunCenter.y + Math.sin(p.angle * 2) * (p.orbitDist * 0.05),
       sunCenter.z + Math.sin(p.angle) * p.orbitDist
     );
 

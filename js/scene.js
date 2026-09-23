@@ -228,41 +228,53 @@ export class WorldScene {
     this.characters = createCharacters();
     this.scene.add(this.characters);
 
-    // 4. TRÁI ĐẤT XANH BIẾC (The Earth) - Hiện diện lộng lẫy trên bầu trời cung trăng
-    this.earth = createEarth(9.5);
-    // Vị trí đẹp: Nhìn thấy rõ từ mặt trăng bên cạnh cây đa
-    this.earth.position.set(-34, 28, -42);
-    this.scene.add(this.earth);
-
-    // 5. TOÀN BỘ HỆ MẶT TRỜI KỲ VĨ (The Solar System)
-    // Khi zoom out xa sẽ chiêm ngưỡng trọn vẹn Mặt Trời rực rỡ, Sao Hỏa, Sao Mộc, Sao Thổ có vành đai
+    // 4. TOÀN BỘ HỆ MẶT TRỜI KỲ VĨ & TRÁI ĐẤT, MẶT TRĂNG (The Solar System)
+    // Trái Đất quay quanh Mặt Trời, Mặt Trăng quay quanh Trái Đất
     this.solarSystem = createSolarSystem();
     this.scene.add(this.solarSystem);
+
+    this.earth = this.solarSystem.earth;
+    this.moon = this.solarSystem.moon;
   }
 
   update() {
     const delta = Math.min(this.clock.getDelta(), 0.1);
     const elapsed = this.clock.getElapsedTime();
 
-    // 1. Trái Đất tự quay quanh trục & Tầng mây cuộn trôi
-    if (this.earth) {
-      if (this.earth.earthMesh) {
-        this.earth.earthMesh.rotation.y += delta * 0.08;
-      }
-      if (this.earth.cloudMesh) {
-        this.earth.cloudMesh.rotation.y += delta * 0.13;
-      }
-    }
-
-    // 2. Các hành tinh trong Hệ Mặt Trời chuyển động theo quỹ đạo
+    // 1. Các hành tinh trong Hệ Mặt Trời chuyển động theo quỹ đạo
     if (this.solarSystem && this.solarSystem.planets) {
       this.solarSystem.planets.forEach(p => {
+        // Quỹ đạo hành tinh quanh Mặt Trời
         p.angle += delta * p.speed * 0.08;
         p.position.x = this.solarSystem.sunCenter.x + Math.cos(p.angle) * p.orbitDist;
         p.position.z = this.solarSystem.sunCenter.z + Math.sin(p.angle) * p.orbitDist;
-        p.rotation.y += delta * 0.4;
+        p.position.y = this.solarSystem.sunCenter.y + Math.sin(p.angle * 2) * (p.orbitDist * 0.05);
+
+        // Chuyển động riêng cho Trái Đất và Mặt Trăng
+        if (p.isEarth) {
+          // Trái Đất tự quay quanh trục nghiêng
+          if (p.earthMesh) {
+            p.earthMesh.rotation.y += delta * 0.35;
+          }
+          // Tầng mây bồng bềnh cuộn trôi
+          if (p.cloudMesh) {
+            p.cloudMesh.rotation.y += delta * 0.55;
+          }
+
+          // MẶT TRĂNG QUAY QUANH TRÁI ĐẤT (Moon Orbiting Earth)
+          if (p.moonMesh) {
+            p.moonMesh.angle += delta * p.moonMesh.speed * 0.35;
+            p.moonMesh.position.x = Math.cos(p.moonMesh.angle) * p.moonMesh.orbitDist;
+            p.moonMesh.position.y = Math.sin(p.moonMesh.angle) * (p.moonMesh.orbitDist * Math.tan(p.moonMesh.inclination));
+            p.moonMesh.position.z = Math.sin(p.moonMesh.angle) * p.moonMesh.orbitDist;
+            p.moonMesh.rotation.y += delta * 0.25;
+          }
+        } else {
+          p.rotation.y += delta * 0.4;
+        }
       });
-      // Mặt Trời tự quay nhẹ
+
+      // Mặt Trời tự quay nhẹ quanh trục
       if (this.solarSystem.sunGroup) {
         this.solarSystem.sunGroup.rotation.y += delta * 0.04;
       }
