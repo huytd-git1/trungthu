@@ -93,7 +93,8 @@ class MidAutumnAudio {
             onReady: (event) => {
               this.ytReady = true;
               event.target.setVolume(80);
-              if (!this.isMuted) {
+              // CHỈ phát YouTube nếu chưa có file MP3 trực tiếp (tránh quảng cáo YouTube)
+              if (!this.isMuted && !this.hasCustomAudio) {
                 try {
                   event.target.unMute();
                   event.target.playVideo();
@@ -104,6 +105,11 @@ class MidAutumnAudio {
             },
             onStateChange: (event) => {
               if (!window.YT) return;
+              if (this.hasCustomAudio) {
+                // Nếu đã có file MP3 không quảng cáo, cưỡng chế tắt YouTube
+                try { this.ytPlayer.pauseVideo(); } catch (e) {}
+                return;
+              }
               if (event.data === window.YT.PlayerState.PLAYING) {
                 this.isPlaying = true;
                 this.isMuted = false;
@@ -156,14 +162,21 @@ class MidAutumnAudio {
           this.ctx.resume();
         }
 
-        if (this.ytPlayer && this.ytReady && typeof this.ytPlayer.playVideo === 'function') {
-          try {
-            this.ytPlayer.unMute();
-            this.ytPlayer.setVolume(80);
-            this.ytPlayer.playVideo();
-          } catch (e) {}
-        } else if (!this.ytReady && !this.isPlaying) {
-          this.fallbackPlay();
+        // ƯU TIÊN 1: Phát trực tiếp file MP3 (100% Sạch - Không quảng cáo)
+        if (this.customAudio && this.hasCustomAudio) {
+          if (this.ytPlayer && typeof this.ytPlayer.pauseVideo === 'function') {
+            try { this.ytPlayer.pauseVideo(); } catch (e) {}
+          }
+          this.customAudio.play().then(() => {
+            this.isPlaying = true;
+            if (typeof this.onStateChange === 'function') {
+              this.onStateChange(true);
+            }
+          }).catch(() => {
+            this.playYouTubeOrFallback();
+          });
+        } else {
+          this.playYouTubeOrFallback();
         }
       }
 
@@ -180,21 +193,40 @@ class MidAutumnAudio {
   }
 
   /**
-   * Kiểm tra file MP3 cục bộ
+   * Kiểm tra và nạp file MP3 không quảng cáo
    */
   checkCustomAudio() {
     if (CUSTOM_AUDIO_URL) {
       const audio = new Audio();
       audio.src = CUSTOM_AUDIO_URL;
       audio.loop = true;
-      audio.volume = 0.65;
+      audio.volume = 0.75;
+      audio.preload = 'auto';
 
-      audio.addEventListener('canplaythrough', () => {
+      const onAudioLoaded = () => {
         this.hasCustomAudio = true;
         this.customAudio = audio;
-      }, { once: true });
+        console.log("Đã phát hiện file MP3 không quảng cáo, ưu tiên phát MP3!");
+        if (!this.isMuted) {
+          if (this.ytPlayer && typeof this.ytPlayer.pauseVideo === 'function') {
+            try { this.ytPlayer.pauseVideo(); } catch (e) {}
+          }
+          audio.play().then(() => {
+            this.isPlaying = true;
+            if (typeof this.onStateChange === 'function') {
+              this.onStateChange(true);
+            }
+          }).catch(e => {
+            // Chờ tương tác đầu tiên (setupAutoplayGestureUnlock sẽ phát ngay)
+          });
+        }
+      };
 
-      audio.addEventListener('error', () => {
+      audio.addEventListener('canplaythrough', onAudioLoaded, { once: true });
+      audio.addEventListener('loadeddata', onAudioLoaded, { once: true });
+
+      audio.addEventListener('error', (e) => {
+        console.warn("Chưa tải được file MP3, dùng YouTube dự phòng:", e);
         this.hasCustomAudio = false;
         this.customAudio = null;
       });
@@ -381,18 +413,21 @@ class MidAutumnAudio {
         this.masterGain.gain.setTargetAtTime(0.35, this.ctx.currentTime, 0.4);
       }
 
-      // Ưu tiên 1: Phát từ YouTube
-      if (this.ytPlayer && this.ytReady && typeof this.ytPlayer.playVideo === 'function') {
-        try {
-          this.ytPlayer.unMute();
-          this.ytPlayer.setVolume(80);
-          this.ytPlayer.playVideo();
-        } catch (e) {
-          console.warn("Không thể phát video YouTube, chuyển âm thanh dự phòng:", e);
-          this.fallbackPlay();
+      // ƯU TIÊN 1 TUYỆT ĐỐI: Phát file MP3 (100% Sạch - Không quảng cáo)
+      if (this.customAudio && this.hasCustomAudio) {
+        if (this.ytPlayer && typeof this.ytPlayer.pauseVideo === 'function') {
+          try { this.ytPlayer.pauseVideo(); } catch (e) {}
         }
+        this.customAudio.play().then(() => {
+          this.isPlaying = true;
+          if (typeof this.onStateChange === 'function') {
+            this.onStateChange(true);
+          }
+        }).catch(e => {
+          this.playYouTubeOrFallback();
+        });
       } else {
-        this.fallbackPlay();
+        this.playYouTubeOrFallback();
       }
 
       this.isPlaying = true;
@@ -400,6 +435,21 @@ class MidAutumnAudio {
         this.onStateChange(true);
       }
       return true;
+    }
+  }
+
+  playYouTubeOrFallback() {
+    if (this.ytPlayer && this.ytReady && typeof this.ytPlayer.playVideo === 'function') {
+      try {
+        this.ytPlayer.unMute();
+        this.ytPlayer.setVolume(80);
+        this.ytPlayer.playVideo();
+      } catch (e) {
+        console.warn("Không thể phát video YouTube, chuyển âm thanh dự phòng:", e);
+        this.fallbackPlay();
+      }
+    } else {
+      this.fallbackPlay();
     }
   }
 
