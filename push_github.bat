@@ -12,13 +12,12 @@ echo.
 if %errorlevel% equ 0 (
     echo ========================================================
     echo  PUSH THANH CONG!
-    echo  Xem ma nguon tai: https://github.com/huytd-git1/trungthu2
+    echo  Xem ma nguon tai: https://github.com/huytd-git1/trungthu
     echo ========================================================
 ) else (
     echo ========================================================
     echo  CO LOI KHI PUSH!
-    echo  Hay chac chan ban da tao repo ten la 'trungthu2' tai:
-    echo  https://github.com/new
+    echo  Hay chac chan ban da cap quyen dang nhap tren trinh duyet nhe.
     echo ========================================================
 )
 pause
