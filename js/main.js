@@ -24,7 +24,6 @@ class MidAutumnApp {
 
     // Khung bảng tên nhân vật (Quỳnh Dương & Mặc Thủ Nhân)
     this.characterNameplateEl = document.getElementById('character-nameplate');
-    this.nameplateRoleEl = document.getElementById('nameplate-role');
     this.nameplateNameEl = document.getElementById('nameplate-name');
     this.nameplateQuoteEl = document.getElementById('nameplate-quote');
     this.activeCharacterTarget = null;
@@ -219,7 +218,6 @@ class MidAutumnApp {
       hitBox
     };
 
-    if (this.nameplateRoleEl) this.nameplateRoleEl.textContent = charData.role;
     if (this.nameplateNameEl) this.nameplateNameEl.textContent = charData.name;
     if (this.nameplateQuoteEl) this.nameplateQuoteEl.textContent = charData.quote;
 
@@ -309,7 +307,7 @@ class MidAutumnApp {
         const charData = charIntersects[0].object.userData;
         if (charData && charData.isCharacter) {
           document.body.style.cursor = 'pointer';
-          this.tooltip.textContent = `✨ ${charData.role}: ${charData.name} (Chạm để xem)`;
+          this.tooltip.textContent = `✨ ${charData.name} (Chạm để xem)`;
           this.tooltip.style.left = `${e.clientX}px`;
           this.tooltip.style.top = `${e.clientY}px`;
           this.tooltip.classList.add('visible');

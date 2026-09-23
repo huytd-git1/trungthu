@@ -53,7 +53,7 @@ function createMoonTexture() {
     ctx.stroke();
 
     // Đáy hố sẫm
-    const innerGrad = ctx.createRadialGradient(c.x - c.r*0.2, c.y - c.r*0.2, 5, c.x, c.y, c.r);
+    const innerGrad = ctx.createRadialGradient(c.x - c.r * 0.2, c.y - c.r * 0.2, 5, c.x, c.y, c.r);
     innerGrad.addColorStop(0, 'rgba(10, 14, 30, 0.45)');
     innerGrad.addColorStop(1, 'rgba(30, 35, 65, 0.05)');
     ctx.fillStyle = innerGrad;
@@ -196,10 +196,10 @@ export function createBanyanTree() {
     const rz = Math.sin(ang) * 4.2;
     const rootCurve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(Math.cos(ang) * 1.4, 2.8, Math.sin(ang) * 1.4),
-      new THREE.Vector3(Math.cos(ang) * 2.6, 1.2, Math.sin(ang) * 2.6 + (idx%2 ? 0.6 : -0.6)),
+      new THREE.Vector3(Math.cos(ang) * 2.6, 1.2, Math.sin(ang) * 2.6 + (idx % 2 ? 0.6 : -0.6)),
       new THREE.Vector3(rx, 0, rz)
     ]);
-    const rootGeo = new THREE.TubeGeometry(rootCurve, 12, 0.55 - idx*0.02, 10, false);
+    const rootGeo = new THREE.TubeGeometry(rootCurve, 12, 0.55 - idx * 0.02, 10, false);
     const root = new THREE.Mesh(rootGeo, barkMat);
     root.castShadow = true;
     root.receiveShadow = true;
@@ -237,7 +237,7 @@ export function createBanyanTree() {
   branches.forEach(b => {
     const bCurve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(...b.start),
-      new THREE.Vector3((b.start[0]+b.end[0])*0.5, (b.start[1]+b.end[1])*0.5 + 0.8, (b.start[2]+b.end[2])*0.5),
+      new THREE.Vector3((b.start[0] + b.end[0]) * 0.5, (b.start[1] + b.end[1]) * 0.5 + 0.8, (b.start[2] + b.end[2]) * 0.5),
       new THREE.Vector3(...b.end)
     ]);
     const bGeo = new THREE.TubeGeometry(bCurve, 14, b.rad, 10, false);
@@ -334,12 +334,12 @@ export function createCharacters() {
   const cuoiLegGeo = new THREE.CapsuleGeometry(0.24, 0.8, 8, 12);
   const cuoiLeftLeg = new THREE.Mesh(cuoiLegGeo, cuoiPantsMat);
   cuoiLeftLeg.position.set(-0.4, 0.25, 0.2);
-  cuoiLeftLeg.rotation.set(Math.PI/2, 0.4, 0.6);
+  cuoiLeftLeg.rotation.set(Math.PI / 2, 0.4, 0.6);
   cuoiGroup.add(cuoiLeftLeg);
 
   const cuoiRightLeg = new THREE.Mesh(cuoiLegGeo, cuoiPantsMat);
   cuoiRightLeg.position.set(0.4, 0.25, 0.2);
-  cuoiRightLeg.rotation.set(Math.PI/2, -0.4, -0.6);
+  cuoiRightLeg.rotation.set(Math.PI / 2, -0.4, -0.6);
   cuoiGroup.add(cuoiRightLeg);
 
   // Tay cầm cây sáo trúc
@@ -376,8 +376,7 @@ export function createCharacters() {
     isCharacter: true,
     characterType: 'cuoi',
     name: 'Mặc Thủ Nhân',
-    role: '🌾 Chú Cuội',
-    quote: 'Chàng Cuội ngồi tựa gốc đa, thổi khúc sáo trúc an yên giữa đêm rằm.'
+    quote: 'Ngồi tựa gốc đa, thổi khúc sáo trúc an yên giữa đêm rằm.'
   };
   cuoiGroup.add(cuoiHitBox);
   cuoiGroup.hitBox = cuoiHitBox;
@@ -470,8 +469,7 @@ export function createCharacters() {
     isCharacter: true,
     characterType: 'hang',
     name: 'Quỳnh Dương',
-    role: '🌕 Chị Hằng',
-    quote: 'Nàng tiên Cung Quảng thanh nhã, gửi ánh trăng vẹn tròn dịu ngọt đến muôn nơi.'
+    quote: 'Thanh nhã dịu dàng, gửi ánh trăng vẹn tròn dịu ngọt đến muôn nơi.'
   };
   hangGroup.add(hangHitBox);
   hangGroup.hitBox = hangHitBox;
